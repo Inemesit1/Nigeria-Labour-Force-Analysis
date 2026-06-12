@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nigeria Labour Force Dashboard — Q1 2024</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #F4F5F7;
+    --surface:   #FFFFFF;
+    --surface2:  #F0F1F3;
+    --border:    #E2E4E9;
+    --text-1:    #111318;
+    --text-2:    #5A5F6E;
+    --text-3:    #9096A5;
+    --green-d:   #0F6E56;
+    --green-m:   #1D9E75;
+    --green-l:   #9FE1CB;
+    --red-d:     #791F1F;
+    --red-m:     #A32D2D;
+    --red-l:     #F7C1C1;
+    --amber-d:   #633806;
+    --amber-m:   #BA7517;
+    --amber-l:   #FAC775;
+    --blue-d:    #0C447C;
+    --blue-m:    #185FA5;
+    --blue-l:    #B5D4F4;
+    --purple-d:  #3C3489;
+    --purple-m:  #534AB7;
+    --purple-l:  #CECBF6;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-1);
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  .page { max-width: 1100px; margin: 0 auto; }
+
+  /* ── Header ── */
+  .header {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 2rem 2.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .header-left {}
+  .header-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--green-m);
+    margin-bottom: 8px;
+  }
+  .header-title {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--text-1);
+    line-height: 1.25;
+    max-width: 560px;
+    margin-bottom: 8px;
+  }
+  .header-sub {
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .header-meta {
+    text-align: right;
+    font-size: 12px;
+    color: var(--text-3);
+    line-height: 1.8;
+  }
+  .header-meta strong { color: var(--text-2); font-weight: 500; }
+
+  /* ── KPI Row ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .kpi.green::before  { background: var(--green-m); }
+  .kpi.red::before    { background: var(--red-m); }
+  .kpi.amber::before  { background: var(--amber-m); }
+  .kpi.blue::before   { background: var(--blue-m); }
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 10px;
+  }
+  .kpi-value {
+    font-size: 34px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .kpi.green  .kpi-value { color: var(--green-d); }
+  .kpi.red    .kpi-value { color: var(--red-m); }
+  .kpi.amber  .kpi-value { color: var(--amber-d); }
+  .kpi.blue   .kpi-value { color: var(--blue-d); }
+  .kpi-note {
+    font-size: 12px;
+    color: var(--text-3);
+  }
+  .kpi-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 6px;
+  }
+  .badge-up { background: var(--red-l); color: var(--red-d); }
+  .badge-dn { background: var(--green-l); color: var(--green-d); }
+
+  /* ── Chart Grid ── */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px 22px;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-1);
+    margin-bottom: 3px;
+  }
+  .card-sub {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .chart-wrap { position: relative; width: 100%; }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: var(--text-2);
+  }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .leg { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ── Insight callout ── */
+  .callout {
+    background: var(--surface2);
+    border-left: 3px solid var(--green-m);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--text-2);
+    margin-top: 12px;
+    line-height: 1.6;
+  }
+  .callout strong { color: var(--text-1); }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-3);
+    padding: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 768px) {
+    body { padding: 1rem; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .header { flex-direction: column; gap: 1rem; }
+    .header-meta { text-align: left; }
+    .header-title { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-eyebrow">Portfolio Project · Data Analytics</div>
+      <h1 class="header-title">The Education Paradox: Does Going to School Guarantee a Job in Nigeria?</h1>
+      <p class="header-sub">An investigative analysis of Nigeria's labour force using official government statistics</p>
+    </div>
+    <div class="header-meta">
+      <strong>Data Source</strong><br>
+      NBS Nigeria Labour Force Survey<br>
+      Q1 2024 (Q4 2022 – Q1 2024)<br><br>
+      <strong>Analyst</strong><br>
+      Precious Hezekiah
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-row">
+    <div class="kpi green">
+      <div class="kpi-label">Official unemployment</div>
+      <div class="kpi-value">5.3%</div>
+      <div class="kpi-note">National rate, Q1 2024</div>
+      <span class="kpi-badge badge-up">↑ from 5.0% Q3 2023</span>
+    </div>
+    <div class="kpi amber">
+      <div class="kpi-label">Real rate (incl. underemployment)</div>
+      <div class="kpi-value">15.3%</div>
+      <div class="kpi-note">Nearly 3× the headline figure</div>
+      <span class="kpi-badge badge-up">↑ from 15.5% Q3 2023</span>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-label">Informal employment</div>
+      <div class="kpi-value">92.7%</div>
+      <div class="kpi-note">No contracts, no protection</div>
+      <span class="kpi-badge badge-up">Persistently above 92%</span>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">Youth NEET rate (15–24)</div>
+      <div class="kpi-value">14.4%</div>
+      <div class="kpi-note">Not in work, school or training</div>
+      <span class="kpi-badge badge-up">↑ from 13.7% Q3 2023</span>
+    </div>
+  </div>
+
+  <!-- Row 1: Education + Trend -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Unemployment rate by education level</div>
+      <div class="card-sub">Post-secondary graduates face the highest unemployment of any group — 9.0%</div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="c1" role="img" aria-label="Horizontal bar chart showing unemployment rates by education level in Nigeria Q1 2024. Post-secondary has the highest rate at 9%."></canvas>
+      </div>
+      <div class="callout"><strong>Key finding:</strong> More education raises unemployment risk — until postgraduate level. A degree is not a job guarantee in Nigeria.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Unemployment trend</div>
+      <div class="card-sub">Brief recovery through 2023 fully reversed by Q1 2024 — back to Q4 2022 levels</div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="c2" role="img" aria-label="Line chart showing Nigeria unemployment trend from Q4 2022 to Q1 2024. Rate dropped then recovered to 5.3%."></canvas>
+      </div>
+      <div class="callout"><strong>Trend:</strong> The improvement seen in Q1–Q2 2023 was short-lived. The labour market is essentially stagnant.</div>
+    </div>
+  </div>
+
+  <!-- Row 2: Gender + Urban -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">The gender triple disadvantage</div>
+      <div class="card-sub">Women face higher unemployment, less wage work, and greater informality simultaneously</div>
+      <div class="legend">
+        <span><span class="leg" style="background:#185FA5"></span>Male</span>
+        <span><span class="leg" style="background:#D85A30"></span>Female</span>
+      </div>
+      <div class="chart-wrap" style="height:200px">
+        <canvas id="c3" role="img" aria-label="Grouped horizontal bar chart comparing male and female unemployment, wage employment, and informal employment rates in Nigeria."></canvas>
+      </div>
+      <div class="callout"><strong>Gender gap:</strong> Female unemployment (6.2%) is 44% higher than male (4.3%). Women are also 10× less likely to hold formal wage employment.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">The urban trap</div>
+      <div class="card-sub">Contrary to expectations, cities have higher unemployment and NEET rates than rural areas</div>
+      <div class="legend">
+        <span><span class="leg" style="background:#1D9E75"></span>Urban</span>
+        <span><span class="leg" style="background:#BA7517"></span>Rural</span>
+      </div>
+      <div class="chart-wrap" style="height:200px">
+        <canvas id="c4" role="img" aria-label="Grouped bar chart comparing urban and rural unemployment and NEET rates in Nigeria Q1 2024."></canvas>
+      </div>
+      <div class="callout"><strong>Urban paradox:</strong> Cities attract job-seekers who then can't find work. Urban NEET (16.6%) is 52% higher than rural (10.9%).</div>
+    </div>
+  </div>
+
+  <!-- Row 3: Age + Informality + Donut -->
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">Unemployment by age group</div>
+      <div class="card-sub">Youth (15–24) are most vulnerable; risk declines steadily with age</div>
+      <div class="chart-wrap" style="height:220px">
+        <canvas id="c5" role="img" aria-label="Bar chart showing unemployment rates by age group in Nigeria Q1 2024. Youth aged 15-24 have the highest rate at 8.4%."></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Education vs informality</div>
+      <div class="card-sub">Only postgraduates escape informal work in meaningful numbers</div>
+      <div class="chart-wrap" style="height:220px">
+        <canvas id="c6" role="img" aria-label="Bar chart showing informal employment percentage by education level. Drops sharply only at postgraduate level to 27.7%."></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Employment quality breakdown</div>
+      <div class="card-sub">Of Nigeria's 73.2% "employed" population — most hold precarious informal jobs</div>
+      <div class="chart-wrap" style="height:160px">
+        <canvas id="c7" role="img" aria-label="Donut chart showing 92.7% informal vs 7.3% formal employment in Nigeria."></canvas>
+      </div>
+      <div class="legend" style="justify-content:center; margin-top:8px">
+        <span><span class="leg" style="background:#A32D2D"></span>Informal 92.7%</span>
+        <span><span class="leg" style="background:#1D9E75"></span>Formal 7.3%</span>
+      </div>
+      <div class="callout" style="margin-top:8px"><strong>73.2%</strong> are "employed" — but 9 in 10 have no formal contract or protection.</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Data: National Bureau of Statistics Nigeria — Labour Force Survey Q1 2024 &nbsp;|&nbsp;
+    Analysis by Precious Hezekiah &nbsp;|&nbsp;
+    Source: nigerianstat.gov.ng
+  </div>
+
+</div>
+
+<script>
+const GRID = 'rgba(0,0,0,0.07)';
+const T2   = '#5A5F6E';
+const base = (horiz) => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + c.raw + '%' } } },
+  scales: {
+    x: { grid: { color: GRID }, ticks: { color: T2, font: { size: 11, family: 'DM Sans' } } },
+    y: { grid: { color: horiz ? GRID : 'transparent' }, ticks: { color: T2, font: { size: 11, family: 'DM Sans' } } }
+  }
+});
+
+/* C1 — Education bar */
+new Chart(document.getElementById('c1'), {
+  type: 'bar',
+  data: {
+    labels: ['No education','Primary','Secondary','Post-secondary','Post-graduate'],
+    datasets: [{
+      data: [2.7, 4.0, 6.9, 9.0, 2.0],
+      backgroundColor: ['#9FE1CB','#5DCAA5','#1D9E75','#A32D2D','#5DCAA5'],
+      borderRadius: 5,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    ...base(true),
+    indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: c => ' ' + c.raw + '%' } }
+    },
+    scales: {
+      x: { grid: { color: GRID }, ticks: { color: T2, font: { size: 11 }, callback: v => v + '%' } },
+      y: { grid: { color: 'transparent' }, ticks: { color: T2, font: { size: 11 } } }
+    }
+  }
+});
+
+/* C2 — Trend line */
+new Chart(document.getElementById('c2'), {
+  type: 'line',
+  data: {
+    labels: ['Q4 2022','Q1 2023','Q2 2023','Q3 2023','Q1 2024'],
+    datasets: [{
+      data: [5.3, 4.1, 4.2, 5.0, 5.3],
+      borderColor: '#A32D2D',
+      backgroundColor: 'rgba(163,45,45,0.07)',
+      tension: 0.35,
+      fill: true,
+      pointBackgroundColor: '#A32D2D',
+      pointRadius: 6,
+      pointHoverRadius: 8
+    }]
+  },
+  options: {
+    ...base(false),
+    scales: {
+      x: { grid: { color: GRID }, ticks: { color: T2, font: { size: 11 } } },
+      y: { min: 3, max: 7, grid: { color: GRID }, ticks: { color: T2, font: { size: 11 }, callback: v => v + '%' } }
+    }
+  }
+});
+
+/* C3 — Gender */
+new Chart(document.getElementById('c3'), {
+  type: 'bar',
+  data: {
+    labels: ['Unemployment rate','Wage employment','Informal employment'],
+    datasets: [
+      { label: 'Male',   data: [4.3, 20.1, 88.7], backgroundColor: '#378ADD', borderRadius: 4 },
+      { label: 'Female', data: [6.2, 12.1, 96.4], backgroundColor: '#D85A30', borderRadius: 4 }
+    ]
+  },
+  options: {
+    ...base(true),
+    indexAxis: 'y',
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.raw + '%' } } },
+    scales: {
+      x: { grid: { color: GRID }, ticks: { color: T2, font: { size: 11 }, callback: v => v + '%' } },
+      y: { grid: { color: 'transparent' }, ticks: { color: T2, font: { size: 11 } } }
+    }
+  }
+});
+
+/* C4 — Urban trap */
+new Chart(document.getElementById('c4'), {
+  type: 'bar',
+  data: {
+    labels: ['Unemployment rate','NEET rate (youth)'],
+    datasets: [
+      { label: 'Urban', data: [6.0, 16.6], backgroundColor: '#1D9E75', borderRadius: 4 },
+      { label: 'Rural', data: [4.3, 10.9], backgroundColor: '#BA7517', borderRadius: 4 }
+    ]
+  },
+  options: {
+    ...base(false),
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.raw + '%' } } },
+    scales: {
+      x: { grid: { color: 'transparent' }, ticks: { color: T2, font: { size: 11 } } },
+      y: { grid: { color: GRID }, ticks: { color: T2, font: { size: 11 }, callback: v => v + '%' } }
+    }
+  }
+});
+
+/* C5 — Age group */
+new Chart(document.getElementById('c5'), {
+  type: 'bar',
+  data: {
+    labels: ['15–24','25–34','35–44','45–54','55–64','65+'],
+    datasets: [{
+      data: [8.4, 7.5, 3.7, 2.2, 1.5, 4.4],
+      backgroundColor: ['#A32D2D','#E24B4A','#5DCAA5','#1D9E75','#0F6E56','#9FE1CB'],
+      borderRadius: 4
+    }]
+  },
+  options: {
+    ...base(false),
+    scales: {
+      x: { grid: { color: 'transparent' }, ticks: { color: T2, font: { size: 11 } } },
+      y: { grid: { color: GRID }, ticks: { color: T2, font: { size: 11 }, callback: v => v + '%' } }
+    }
+  }
+});
+
+/* C6 — Informality */
+new Chart(document.getElementById('c6'), {
+  type: 'bar',
+  data: {
+    labels: ['No edu.','Primary','Secondary','Post-sec.','Post-grad.'],
+    datasets: [{
+      data: [99.2, 97.8, 93.7, 70.7, 27.7],
+      backgroundColor: ['#3C3489','#534AB7','#7F77DD','#AFA9EC','#EEEDFE'],
+      borderRadius: 4
+    }]
+  },
+  options: {
+    ...base(false),
+    scales: {
+      x: { grid: { color: 'transparent' }, ticks: { color: T2, font: { size: 10 }, maxRotation: 20 } },
+      y: { min: 0, max: 100, grid: { color: GRID }, ticks: { color: T2, font: { size: 11 }, callback: v => v + '%' } }
+    }
+  }
+});
+
+/* C7 — Donut */
+new Chart(document.getElementById('c7'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Informal','Formal'],
+    datasets: [{
+      data: [92.7, 7.3],
+      backgroundColor: ['#A32D2D','#1D9E75'],
+      borderWidth: 0,
+      hoverOffset: 4
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '68%',
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: c => ' ' + c.label + ': ' + c.raw + '%' } }
+    }
+  }
+});
+</script>
+</body>
+</html>
